@@ -52,6 +52,11 @@ const TESTS = [
     prompt: 'Update the todo list to mark the first item as completed',
     expectInResponse: ['completed', 'Test item'],
   },
+  {
+    name: 'web_search',
+    prompt: 'Use web_search to search for "TypeScript best practices 2024". Return the top 3 results.',
+    expectInResponse: ['TypeScript', 'http', 'result'],
+  },
 ];
 
 async function runTest(agent, test, index) {

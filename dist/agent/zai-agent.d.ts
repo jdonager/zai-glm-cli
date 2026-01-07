@@ -39,6 +39,7 @@ export declare class ZaiAgent extends EventEmitter {
     private confirmationTool;
     private search;
     private batchEditor;
+    private webSearchTool;
     private chatHistory;
     private messages;
     private tokenCounter;

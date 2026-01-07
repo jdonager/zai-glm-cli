@@ -2,6 +2,7 @@ import { ZaiClient } from "../zai/client.js";
 import { getAllZaiTools, getMCPManager, initializeMCPServers, } from "../zai/tools.js";
 import { loadMCPConfig } from "../mcp/config.js";
 import { TextEditorTool, MorphEditorTool, BashTool, TodoTool, ConfirmationTool, SearchTool, BatchEditorTool, } from "../tools/index.js";
+import { WebSearchTool } from "../tools/web-search.js";
 import { EventEmitter } from "events";
 import { createTokenCounter } from "../utils/token-counter.js";
 import { loadCustomInstructions } from "../utils/custom-instructions.js";
@@ -20,6 +21,7 @@ export class ZaiAgent extends EventEmitter {
     confirmationTool;
     search;
     batchEditor;
+    webSearchTool;
     chatHistory = [];
     messages = [];
     tokenCounter;
@@ -45,6 +47,7 @@ export class ZaiAgent extends EventEmitter {
         this.confirmationTool = new ConfirmationTool();
         this.search = new SearchTool();
         this.batchEditor = new BatchEditorTool();
+        this.webSearchTool = new WebSearchTool(apiKey, baseURL);
         this.tokenCounter = createTokenCounter(modelToUse);
         // Initialize MCP servers if configured
         this.initializeMCP();
@@ -833,6 +836,14 @@ ${summary}
                         agent_type: args.agent_type,
                         task_description: args.task_description,
                         thoroughness: args.thoroughness,
+                    });
+                case "web_search":
+                    // Z.ai Web Search API
+                    return await this.webSearchTool.search(args.query, {
+                        search_engine: args.search_engine,
+                        count: args.count,
+                        search_domain_filter: args.search_domain_filter,
+                        search_recency_filter: args.search_recency_filter,
                     });
                 default:
                     // Check if this is an MCP tool

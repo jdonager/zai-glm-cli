@@ -16,6 +16,7 @@ import {
   SearchTool,
   BatchEditorTool,
 } from "../tools/index.js";
+import { WebSearchTool } from "../tools/web-search.js";
 import { ToolResult } from "../types/index.js";
 import { EventEmitter } from "events";
 import { createTokenCounter, TokenCounter } from "../utils/token-counter.js";
@@ -63,6 +64,7 @@ export class ZaiAgent extends EventEmitter {
   private confirmationTool: ConfirmationTool;
   private search: SearchTool;
   private batchEditor: BatchEditorTool;
+  private webSearchTool: WebSearchTool;
   private chatHistory: ChatEntry[] = [];
   private messages: ZaiMessage[] = [];
   private tokenCounter: TokenCounter;
@@ -95,6 +97,7 @@ export class ZaiAgent extends EventEmitter {
     this.confirmationTool = new ConfirmationTool();
     this.search = new SearchTool();
     this.batchEditor = new BatchEditorTool();
+    this.webSearchTool = new WebSearchTool(apiKey, baseURL);
     this.tokenCounter = createTokenCounter(modelToUse);
 
     // Initialize MCP servers if configured
@@ -1012,6 +1015,15 @@ ${summary}
             agent_type: args.agent_type,
             task_description: args.task_description,
             thoroughness: args.thoroughness,
+          });
+
+        case "web_search":
+          // Z.ai Web Search API
+          return await this.webSearchTool.search(args.query, {
+            search_engine: args.search_engine,
+            count: args.count,
+            search_domain_filter: args.search_domain_filter,
+            search_recency_filter: args.search_recency_filter,
           });
 
         default:

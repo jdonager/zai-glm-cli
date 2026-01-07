@@ -2,6 +2,7 @@ import { ZaiTool } from "./client.js";
 import { MCPManager, MCPTool } from "../mcp/client.js";
 import { loadMCPConfig } from "../mcp/config.js";
 import { TaskTool } from "../tools/task-tool.js";
+import { getWebSearchToolDefinition } from "../tools/web-search.js";
 
 const BASE_ZAI_TOOLS: ZaiTool[] = [
   {
@@ -625,6 +626,9 @@ function buildZaiTools(): ZaiTool[] {
 
   // Add Task/Agent tool - allows GLM to spawn specialized agents
   tools.push(TaskTool.getToolDefinition());
+
+  // Add Web Search tool - Z.ai web search API
+  tools.push(getWebSearchToolDefinition() as ZaiTool);
 
   return tools;
 }
