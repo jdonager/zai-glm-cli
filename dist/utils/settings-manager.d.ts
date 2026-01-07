@@ -33,6 +33,11 @@ export declare class SettingsManager {
      */
     static getInstance(): SettingsManager;
     /**
+     * Reset the singleton instance (for testing purposes only)
+     * This allows tests to create a fresh instance with mocked paths
+     */
+    static resetInstance(): void;
+    /**
      * Ensure directory exists for a given file path
      */
     private ensureDirectoryExists;

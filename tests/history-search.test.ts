@@ -1,9 +1,23 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import fs from "fs";
+import path from "path";
+import os from "os";
+
+// Store the test home directory at module level for the mock
+let mockHomeDir: string = os.tmpdir();
+
+// Mock os module to use our test home directory
+vi.mock('os', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('os')>();
+  return {
+    ...actual,
+    homedir: () => mockHomeDir,
+  };
+});
+
+// Import modules that use os.homedir AFTER the mock is set up
 import { HistoryManager } from "../src/utils/history-manager.js";
 import { SettingsManager } from "../src/utils/settings-manager.js";
-import * as fs from "fs";
-import * as path from "path";
-import * as os from "os";
 
 /**
  * History Search Component and Functionality Tests
@@ -165,17 +179,27 @@ class SearchModeSimulator {
 describe("History Search Integration Tests", () => {
   let testHistoryPath: string;
   let testSettingsPath: string;
+  let testHomeDir: string;
+  let tempDir: string;
 
   beforeEach(() => {
-    // Reset singleton instances
-    HistoryManager.resetInstance();
-    (SettingsManager as any).instance = null;
-
     // Create temporary directory for test files
-    const tempDir = path.join(os.tmpdir(), `zai-test-${Date.now()}`);
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    testHomeDir = path.join(os.tmpdir(), `zai-test-home-${uniqueId}`);
+    tempDir = path.join(os.tmpdir(), `zai-test-${uniqueId}`);
+
+    // Update the module-level mock to return our test home directory
+    mockHomeDir = testHomeDir;
+
+    fs.mkdirSync(testHomeDir, { recursive: true });
     fs.mkdirSync(tempDir, { recursive: true });
+
     testHistoryPath = path.join(tempDir, "history.json");
-    testSettingsPath = path.join(tempDir, "user-settings.json");
+    testSettingsPath = path.join(testHomeDir, ".zai", "user-settings.json");
+
+    // Reset singleton instances (they will now use the mocked homedir)
+    HistoryManager.resetInstance();
+    SettingsManager.resetInstance();
 
     // Override paths for testing
     const historyManager = HistoryManager.getInstance();
@@ -184,8 +208,8 @@ describe("History Search Integration Tests", () => {
     // Clear any history that was loaded from default location
     (historyManager as any).history = [];
 
-    const settingsManager = SettingsManager.getInstance();
-    (settingsManager as any).userSettingsPath = testSettingsPath;
+    // Create .zai directory for settings
+    fs.mkdirSync(path.dirname(testSettingsPath), { recursive: true });
 
     // Initialize with enableHistory: true
     fs.writeFileSync(
@@ -196,20 +220,23 @@ describe("History Search Integration Tests", () => {
 
   afterEach(() => {
     // Clean up test files
-    if (fs.existsSync(testHistoryPath)) {
-      fs.unlinkSync(testHistoryPath);
-    }
-    if (fs.existsSync(testSettingsPath)) {
-      fs.unlinkSync(testSettingsPath);
-    }
-    const dir = path.dirname(testHistoryPath);
-    if (fs.existsSync(dir)) {
-      fs.rmSync(dir, { recursive: true, force: true });
+    try {
+      if (testHistoryPath && fs.existsSync(testHistoryPath)) {
+        fs.unlinkSync(testHistoryPath);
+      }
+      if (tempDir && fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
+      if (testHomeDir && fs.existsSync(testHomeDir)) {
+        fs.rmSync(testHomeDir, { recursive: true, force: true });
+      }
+    } catch (e) {
+      // Ignore cleanup errors
     }
 
     // Reset singletons
     HistoryManager.resetInstance();
-    (SettingsManager as any).instance = null;
+    SettingsManager.resetInstance();
   });
 
   describe("History Navigation Logic", () => {
@@ -337,8 +364,8 @@ describe("History Search Integration Tests", () => {
         JSON.stringify({ enableHistory: false })
       );
 
-      // Force reload settings
-      (SettingsManager as any).instance = null;
+      // Force reload settings (spy is still active from beforeEach)
+      SettingsManager.resetInstance();
       HistoryManager.resetInstance();
 
       const historyManager = HistoryManager.getInstance({ enabled: false });

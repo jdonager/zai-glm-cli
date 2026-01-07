@@ -1,20 +1,33 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { SettingsManager } from '../../../src/utils/settings-manager';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+// Store the test home directory at module level for the mock
+let mockHomeDir: string = os.tmpdir();
+
+// Mock os module to use our test home directory
+vi.mock('os', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('os')>();
+  return {
+    ...actual,
+    homedir: () => mockHomeDir,
+  };
+});
+
+// Import SettingsManager AFTER the mock is set up
+import { SettingsManager } from '../../../src/utils/settings-manager';
+
 describe('SettingsManager', () => {
   let testDir: string;
+  let testHomeDir: string;
   let originalCwd: string;
-  let originalHome: string;
   let originalZaiBaseUrl: string | undefined;
   let originalZaiApiKey: string | undefined;
 
   beforeEach(() => {
     // Save original values
     originalCwd = process.cwd();
-    originalHome = os.homedir();
     originalZaiBaseUrl = process.env.ZAI_BASE_URL;
     originalZaiApiKey = process.env.ZAI_API_KEY;
 
@@ -22,9 +35,19 @@ describe('SettingsManager', () => {
     delete process.env.ZAI_BASE_URL;
     delete process.env.GROK_BASE_URL;
 
-    // Create temporary test directory
-    testDir = path.join(os.tmpdir(), `zai-test-${Date.now()}-${Math.random().toString(36).substring(7)}`);
+    // Create unique temporary test directories
+    const uniqueId = `${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    testDir = path.join(os.tmpdir(), `zai-test-project-${uniqueId}`);
+    testHomeDir = path.join(os.tmpdir(), `zai-test-home-${uniqueId}`);
+
+    // Update the mock to return our test home directory
+    mockHomeDir = testHomeDir;
+
     fs.mkdirSync(testDir, { recursive: true });
+    fs.mkdirSync(testHomeDir, { recursive: true });
+
+    // Reset the SettingsManager singleton so it picks up the mocked homedir
+    SettingsManager.resetInstance();
 
     // Change to test directory for project settings
     process.chdir(testDir);
@@ -37,14 +60,24 @@ describe('SettingsManager', () => {
     // Restore environment variables
     if (originalZaiBaseUrl) {
       process.env.ZAI_BASE_URL = originalZaiBaseUrl;
+    } else {
+      delete process.env.ZAI_BASE_URL;
     }
     if (originalZaiApiKey) {
       process.env.ZAI_API_KEY = originalZaiApiKey;
+    } else {
+      delete process.env.ZAI_API_KEY;
     }
 
-    // Clean up test directory
+    // Reset the singleton
+    SettingsManager.resetInstance();
+
+    // Clean up test directories
     if (fs.existsSync(testDir)) {
       fs.rmSync(testDir, { recursive: true, force: true });
+    }
+    if (fs.existsSync(testHomeDir)) {
+      fs.rmSync(testHomeDir, { recursive: true, force: true });
     }
   });
 

@@ -52,6 +52,13 @@ export class SettingsManager {
         return SettingsManager.instance;
     }
     /**
+     * Reset the singleton instance (for testing purposes only)
+     * This allows tests to create a fresh instance with mocked paths
+     */
+    static resetInstance() {
+        SettingsManager.instance = undefined;
+    }
+    /**
      * Ensure directory exists for a given file path
      */
     ensureDirectoryExists(filePath) {
