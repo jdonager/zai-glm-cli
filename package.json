@@ -14,7 +14,7 @@
     "zai": "dist/index.js"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "npx tsc",
     "prepare": "npm run build",
     "prepublishOnly": "npm run build",
     "build:bun": "bun run tsc",
