@@ -463,7 +463,7 @@ function ChatInterfaceWithAgent({ agent, initialMessage, initialSession, watchMo
             React.createElement(Box, { marginTop: 1, flexDirection: "column" },
                 React.createElement(Text, { color: "gray" }, "1. Ask questions, edit files, or run commands."),
                 React.createElement(Text, { color: "gray" }, "2. Be specific for the best results."),
-                React.createElement(Text, { color: "gray" }, "3. Create ZAI.md files to customize your interactions with ZAI."),
+                React.createElement(Text, { color: "gray" }, "3. Create AGENTS.md or ZAI.md to provide repo context to ZAI."),
                 React.createElement(Text, { color: "gray" }, "4. Press Shift+Tab to toggle auto-edit mode."),
                 React.createElement(Text, { color: "gray" }, "5. /help for more information.")))),
         React.createElement(Box, { flexDirection: "column", marginBottom: 1 },

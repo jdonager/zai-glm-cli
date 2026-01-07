@@ -1,5 +1,6 @@
 /**
- * Load custom instructions from the project's .zai/ZAI.md file
- * This allows projects to define Z.ai-specific behavior and context
+ * Load custom instructions from project files.
+ * Checks for AGENTS.md and ZAI.md in both root and .zai directory.
+ * All found files are concatenated to provide full context.
  */
 export declare function loadCustomInstructions(workingDirectory?: string): string | null;

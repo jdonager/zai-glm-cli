@@ -595,7 +595,7 @@ function ChatInterfaceWithAgent({
             </Text>
             <Text color="gray">2. Be specific for the best results.</Text>
             <Text color="gray">
-              3. Create ZAI.md files to customize your interactions with ZAI.
+              3. Create AGENTS.md or ZAI.md to provide repo context to ZAI.
             </Text>
             <Text color="gray">
               4. Press Shift+Tab to toggle auto-edit mode.
