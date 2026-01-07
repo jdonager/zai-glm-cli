@@ -39,9 +39,17 @@ export declare class SearchTool {
         includeHidden?: boolean;
     }): Promise<ToolResult>;
     /**
-     * Execute ripgrep command with specified options
+     * Execute ripgrep command with specified options, with fallback to Node-based search
      */
     private executeRipgrep;
+    /**
+     * Try to execute ripgrep
+     */
+    private tryRipgrep;
+    /**
+     * Fallback Node-based text search when ripgrep is not available
+     */
+    private fallbackTextSearch;
     /**
      * Parse ripgrep JSON output into SearchResult objects
      */
