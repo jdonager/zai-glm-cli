@@ -1,5 +1,6 @@
 import * as fs from "fs-extra";
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from "fs";
+import { stat, readFile } from "fs/promises";
 import * as path from "path";
 import * as os from "os";
 export class BackupManager {
@@ -61,8 +62,8 @@ export class BackupManager {
                 return null;
             }
             // Read file content
-            const content = await fs.readFile(resolvedPath, "utf-8");
-            const stats = await fs.stat(resolvedPath);
+            const content = await readFile(resolvedPath, "utf-8");
+            const stats = await stat(resolvedPath);
             // Generate backup filename with timestamp
             const timestamp = Date.now();
             const basename = path.basename(filePath);
@@ -141,7 +142,7 @@ export class BackupManager {
                 backup = backups[0];
             }
             // Read backup content
-            const content = await fs.readFile(backup.backupPath, "utf-8");
+            const content = await readFile(backup.backupPath, "utf-8");
             // Verify checksum
             const checksum = this.computeChecksum(content);
             if (checksum !== backup.checksum) {

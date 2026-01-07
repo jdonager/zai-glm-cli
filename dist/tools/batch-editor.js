@@ -1,5 +1,6 @@
 import * as fs from "fs-extra";
 import * as path from "path";
+import { readFile } from "fs/promises";
 import { TextEditorTool } from "./text-editor.js";
 import { SearchTool } from "./search.js";
 import { ConfirmationService } from "../utils/confirmation-service.js";
@@ -102,7 +103,7 @@ export class BatchEditorTool {
         // Preview first 3 files only to avoid overwhelming output
         for (const file of files.slice(0, 3)) {
             try {
-                const content = await fs.readFile(file, "utf-8");
+                const content = await readFile(file, "utf-8");
                 const newContent = this.applyOperation(content, operation);
                 const changes = this.countChanges(content, newContent);
                 previews.push({
@@ -180,7 +181,7 @@ export class BatchEditorTool {
     }
     async processFile(file, operation) {
         try {
-            const content = await fs.readFile(file, "utf-8");
+            const content = await readFile(file, "utf-8");
             const newContent = this.applyOperation(content, operation);
             if (content === newContent) {
                 return {

@@ -1,5 +1,6 @@
 import * as fs from "fs-extra";
 import * as path from "path";
+import { stat, readFile } from "fs/promises";
 import axios from "axios";
 import { ConfirmationService } from "../utils/confirmation-service.js";
 export class MorphEditorTool {
@@ -51,7 +52,7 @@ export class MorphEditorTool {
                 };
             }
             // Read the initial code
-            const initialCode = await fs.readFile(resolvedPath, "utf-8");
+            const initialCode = await readFile(resolvedPath, "utf-8");
             // Check user confirmation before proceeding
             const sessionFlags = this.confirmationService.getSessionFlags();
             if (!sessionFlags.fileOperations && !sessionFlags.allOperations) {
@@ -252,7 +253,7 @@ export class MorphEditorTool {
         try {
             const resolvedPath = path.resolve(filePath);
             if (await fs.pathExists(resolvedPath)) {
-                const stats = await fs.stat(resolvedPath);
+                const stats = await stat(resolvedPath);
                 if (stats.isDirectory()) {
                     const files = await fs.readdir(resolvedPath);
                     return {
@@ -260,7 +261,7 @@ export class MorphEditorTool {
                         output: `Directory contents of ${filePath}:\n${files.join("\n")}`,
                     };
                 }
-                const content = await fs.readFile(resolvedPath, "utf-8");
+                const content = await readFile(resolvedPath, "utf-8");
                 const lines = content.split("\n");
                 if (viewRange) {
                     const [start, end] = viewRange;
