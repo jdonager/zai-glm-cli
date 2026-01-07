@@ -1,4 +1,5 @@
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { SSEClientTransport as MCPSSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import { EventEmitter } from "events";
 import axios from "axios";
 export class StdioTransport {
@@ -84,6 +85,7 @@ export class HttpTransport extends EventEmitter {
 export class SSETransport extends EventEmitter {
     config;
     connected = false;
+    transport;
     constructor(config) {
         super();
         this.config = config;
@@ -92,19 +94,22 @@ export class SSETransport extends EventEmitter {
         }
     }
     async connect() {
-        return new Promise((resolve, reject) => {
-            try {
-                // For Node.js environment, we'll use a simple HTTP-based approach
-                // In a real implementation, you'd use a proper SSE library like 'eventsource'
-                this.connected = true;
-                resolve(new SSEClientTransport(this.config.url));
-            }
-            catch (error) {
-                reject(error);
-            }
-        });
+        try {
+            // Use the MCP SDK's SSE transport which handles the SSE protocol correctly
+            const url = new URL(this.config.url);
+            this.transport = new MCPSSEClientTransport(url);
+            this.connected = true;
+            return this.transport;
+        }
+        catch (error) {
+            throw error;
+        }
     }
     async disconnect() {
+        if (this.transport) {
+            await this.transport.close();
+            this.transport = undefined;
+        }
         this.connected = false;
     }
     getType() {
@@ -131,33 +136,6 @@ class HttpClientTransport extends EventEmitter {
         }
         catch (error) {
             throw new Error(`HTTP transport error: ${error}`);
-        }
-    }
-}
-// Custom SSE Transport implementation
-class SSEClientTransport extends EventEmitter {
-    url;
-    constructor(url) {
-        super();
-        this.url = url;
-    }
-    async start() {
-        // SSE transport is event-driven, so we're always "started"
-    }
-    async close() {
-        // Nothing to close for basic SSE transport
-    }
-    async send(message) {
-        // For bidirectional communication over SSE, we typically use HTTP POST
-        // for sending messages and SSE for receiving
-        try {
-            const response = await axios.post(this.url.replace('/sse', '/rpc'), message, {
-                headers: { 'Content-Type': 'application/json' }
-            });
-            return response.data;
-        }
-        catch (error) {
-            throw new Error(`SSE transport error: ${error}`);
         }
     }
 }

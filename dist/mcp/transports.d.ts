@@ -35,6 +35,7 @@ export declare class HttpTransport extends EventEmitter implements MCPTransport 
 export declare class SSETransport extends EventEmitter implements MCPTransport {
     private config;
     private connected;
+    private transport?;
     constructor(config: TransportConfig);
     connect(): Promise<Transport>;
     disconnect(): Promise<void>;
