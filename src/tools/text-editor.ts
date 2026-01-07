@@ -1,6 +1,6 @@
 import * as fs from "fs-extra";
 import * as path from "path";
-import { writeFile as writeFilePromise, stat, readFile } from "fs/promises";
+import { writeFile as writeFilePromise, stat, readFile, readdir, unlink, mkdir, access } from "fs/promises";
 import { ToolResult, EditorCommand } from "../types/index.js";
 import { ConfirmationService } from "../utils/confirmation-service.js";
 import {
@@ -14,6 +14,21 @@ import { ErrorHandler } from "../utils/error-handler.js";
 import { BackupManager } from "../utils/backup-manager.js";
 import { DiffGenerator } from "../utils/diff-generator.js";
 
+// Helper function to check if path exists (replaces fs-extra pathExists)
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Helper function to ensure directory exists (replaces fs-extra ensureDir)
+async function ensureDir(dirPath: string): Promise<void> {
+  await mkdir(dirPath, { recursive: true });
+}
+
 export class TextEditorTool {
   private editHistory: EditorCommand[] = [];
   private confirmationService = ConfirmationService.getInstance();
@@ -26,11 +41,11 @@ export class TextEditorTool {
     try {
       const resolvedPath = path.resolve(filePath);
 
-      if (await fs.pathExists(resolvedPath)) {
+      if (await pathExists(resolvedPath)) {
         const stats = await stat(resolvedPath);
 
         if (stats.isDirectory()) {
-          const files = await fs.readdir(resolvedPath);
+          const files = await readdir(resolvedPath);
           return {
             success: true,
             output: `Directory contents of ${filePath}:\n${files.join("\n")}`,
@@ -96,7 +111,7 @@ export class TextEditorTool {
     try {
       const resolvedPath = path.resolve(filePath);
 
-      if (!(await fs.pathExists(resolvedPath))) {
+      if (!(await pathExists(resolvedPath))) {
         const notFoundError = new FileNotFoundError(filePath, 'edit');
         return {
           success: false,
@@ -201,7 +216,7 @@ export class TextEditorTool {
       const resolvedPath = path.resolve(filePath);
 
       // Check if file already exists
-      if (await fs.pathExists(resolvedPath)) {
+      if (await pathExists(resolvedPath)) {
         const existsError = new FileAlreadyExistsError(filePath);
         return {
           success: false,
@@ -243,7 +258,7 @@ export class TextEditorTool {
       }
 
       const dir = path.dirname(resolvedPath);
-      await fs.ensureDir(dir);
+      await ensureDir(dir);
 
       // For new files, no backup needed
       await writeFilePromise(resolvedPath, content, "utf-8");
@@ -291,7 +306,7 @@ export class TextEditorTool {
     try {
       const resolvedPath = path.resolve(filePath);
 
-      if (!(await fs.pathExists(resolvedPath))) {
+      if (!(await pathExists(resolvedPath))) {
         const notFoundError = new FileNotFoundError(filePath, 'edit lines');
         return {
           success: false,
@@ -393,7 +408,7 @@ export class TextEditorTool {
     try {
       const resolvedPath = path.resolve(filePath);
 
-      if (!(await fs.pathExists(resolvedPath))) {
+      if (!(await pathExists(resolvedPath))) {
         const notFoundError = new FileNotFoundError(filePath, 'insert into');
         return {
           success: false,
@@ -465,7 +480,7 @@ export class TextEditorTool {
 
         case "create":
           if (lastEdit.path) {
-            await fs.remove(lastEdit.path);
+            await unlink(lastEdit.path);
           }
           break;
 

@@ -1,6 +1,15 @@
-import * as fs from "fs-extra";
 import * as path from "path";
-import { stat, readFile } from "fs/promises";
+import { stat, readFile, readdir, writeFile, access } from "fs/promises";
+// Helper function to check if path exists (replaces fs-extra pathExists)
+async function pathExists(filePath) {
+    try {
+        await access(filePath);
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
 import axios from "axios";
 import { ConfirmationService } from "../utils/confirmation-service.js";
 export class MorphEditorTool {
@@ -39,7 +48,7 @@ export class MorphEditorTool {
     async editFile(targetFile, instructions, codeEdit) {
         try {
             const resolvedPath = path.resolve(targetFile);
-            if (!(await fs.pathExists(resolvedPath))) {
+            if (!(await pathExists(resolvedPath))) {
                 return {
                     success: false,
                     error: `File not found: ${targetFile}`,
@@ -72,7 +81,7 @@ export class MorphEditorTool {
             // Call Morph Fast Apply API
             const mergedCode = await this.callMorphApply(instructions, initialCode, codeEdit);
             // Write the merged code back to file
-            await fs.writeFile(resolvedPath, mergedCode, "utf-8");
+            await writeFile(resolvedPath, mergedCode, "utf-8");
             // Generate diff for display
             const oldLines = initialCode.split("\n");
             const newLines = mergedCode.split("\n");
@@ -252,10 +261,10 @@ export class MorphEditorTool {
     async view(filePath, viewRange) {
         try {
             const resolvedPath = path.resolve(filePath);
-            if (await fs.pathExists(resolvedPath)) {
+            if (await pathExists(resolvedPath)) {
                 const stats = await stat(resolvedPath);
                 if (stats.isDirectory()) {
-                    const files = await fs.readdir(resolvedPath);
+                    const files = await readdir(resolvedPath);
                     return {
                         success: true,
                         output: `Directory contents of ${filePath}:\n${files.join("\n")}`,

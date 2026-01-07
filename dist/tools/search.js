@@ -1,6 +1,5 @@
 import { spawn } from "child_process";
 import { ConfirmationService } from "../utils/confirmation-service.js";
-import * as fs from "fs-extra";
 import * as path from "path";
 import { readFile, readdir } from "fs/promises";
 export class SearchTool {
@@ -328,7 +327,7 @@ export class SearchTool {
             if (depth > 10 || files.length >= maxResults)
                 return; // Prevent infinite recursion and limit results
             try {
-                const entries = await fs.readdir(dir, { withFileTypes: true });
+                const entries = await readdir(dir, { withFileTypes: true });
                 for (const entry of entries) {
                     if (files.length >= maxResults)
                         break;

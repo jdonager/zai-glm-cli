@@ -1,6 +1,16 @@
 import * as fs from "fs-extra";
 import * as path from "path";
-import { stat, readFile } from "fs/promises";
+import { stat, readFile, readdir, writeFile, access } from "fs/promises";
+
+// Helper function to check if path exists (replaces fs-extra pathExists)
+async function pathExists(filePath: string): Promise<boolean> {
+  try {
+    await access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
 import axios from "axios";
 import { ToolResult } from "../types/index.js";
 import { ConfirmationService } from "../utils/confirmation-service.js";
@@ -48,7 +58,7 @@ export class MorphEditorTool {
     try {
       const resolvedPath = path.resolve(targetFile);
 
-      if (!(await fs.pathExists(resolvedPath))) {
+      if (!(await pathExists(resolvedPath))) {
         return {
           success: false,
           error: `File not found: ${targetFile}`,
@@ -90,7 +100,7 @@ export class MorphEditorTool {
       const mergedCode = await this.callMorphApply(instructions, initialCode, codeEdit);
 
       // Write the merged code back to file
-      await fs.writeFile(resolvedPath, mergedCode, "utf-8");
+      await writeFile(resolvedPath, mergedCode, "utf-8");
 
       // Generate diff for display
       const oldLines = initialCode.split("\n");
@@ -331,11 +341,11 @@ export class MorphEditorTool {
     try {
       const resolvedPath = path.resolve(filePath);
 
-      if (await fs.pathExists(resolvedPath)) {
+      if (await pathExists(resolvedPath)) {
         const stats = await stat(resolvedPath);
 
         if (stats.isDirectory()) {
-          const files = await fs.readdir(resolvedPath);
+          const files = await readdir(resolvedPath);
           return {
             success: true,
             output: `Directory contents of ${filePath}:\n${files.join("\n")}`,

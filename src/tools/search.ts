@@ -467,7 +467,7 @@ export class SearchTool {
       if (depth > 10 || files.length >= maxResults) return; // Prevent infinite recursion and limit results
 
       try {
-        const entries = await fs.readdir(dir, { withFileTypes: true });
+        const entries = await readdir(dir, { withFileTypes: true });
 
         for (const entry of entries) {
           if (files.length >= maxResults) break;

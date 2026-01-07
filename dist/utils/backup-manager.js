@@ -1,8 +1,9 @@
 import * as fs from "fs-extra";
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from "fs";
-import { stat, readFile } from "fs/promises";
+import { stat, readFile, writeFile, unlink } from "fs/promises";
 import * as path from "path";
 import * as os from "os";
+import { createHash } from "crypto";
 export class BackupManager {
     static instance;
     backupDir;
@@ -51,8 +52,7 @@ export class BackupManager {
         }
     }
     computeChecksum(content) {
-        const crypto = require("crypto");
-        return crypto.createHash("sha256").update(content).digest("hex");
+        return createHash("sha256").update(content).digest("hex");
     }
     async createBackup(filePath) {
         try {
@@ -71,7 +71,7 @@ export class BackupManager {
             const backupFilename = `${dirname}_${basename}_${timestamp}.bak`;
             const backupPath = path.join(this.backupDir, backupFilename);
             // Write backup
-            await fs.writeFile(backupPath, content, "utf-8");
+            await writeFile(backupPath, content, "utf-8");
             // Create metadata
             const metadata = {
                 originalPath: resolvedPath,
@@ -150,7 +150,7 @@ export class BackupManager {
                 return false;
             }
             // Restore file
-            await fs.writeFile(resolvedPath, content, "utf-8");
+            await writeFile(resolvedPath, content, "utf-8");
             return true;
         }
         catch (error) {
@@ -175,7 +175,7 @@ export class BackupManager {
                 const backups = this.backupIndex.get(resolvedPath) || [];
                 for (const backup of backups) {
                     if (existsSync(backup.backupPath)) {
-                        await fs.unlink(backup.backupPath);
+                        await unlink(backup.backupPath);
                     }
                 }
                 this.backupIndex.delete(resolvedPath);
@@ -185,7 +185,7 @@ export class BackupManager {
                 for (const [, backups] of this.backupIndex) {
                     for (const backup of backups) {
                         if (existsSync(backup.backupPath)) {
-                            await fs.unlink(backup.backupPath);
+                            await unlink(backup.backupPath);
                         }
                     }
                 }
