@@ -1,6 +1,6 @@
 import * as fs from "fs-extra";
 import * as path from "path";
-import { writeFile as writeFilePromise } from "fs/promises";
+import { writeFile as writeFilePromise, stat, readFile } from "fs/promises";
 import { ToolResult, EditorCommand } from "../types/index.js";
 import { ConfirmationService } from "../utils/confirmation-service.js";
 import {
@@ -27,7 +27,7 @@ export class TextEditorTool {
       const resolvedPath = path.resolve(filePath);
 
       if (await fs.pathExists(resolvedPath)) {
-        const stats = await fs.stat(resolvedPath);
+        const stats = await stat(resolvedPath);
 
         if (stats.isDirectory()) {
           const files = await fs.readdir(resolvedPath);
@@ -37,7 +37,7 @@ export class TextEditorTool {
           };
         }
 
-        const content = await fs.readFile(resolvedPath, "utf-8");
+        const content = await readFile(resolvedPath, "utf-8");
         const lines = content.split("\n");
 
         if (viewRange) {
@@ -104,7 +104,7 @@ export class TextEditorTool {
         };
       }
 
-      const content = await fs.readFile(resolvedPath, "utf-8");
+      const content = await readFile(resolvedPath, "utf-8");
 
       if (!content.includes(oldStr)) {
         if (oldStr.includes('\n')) {
@@ -299,7 +299,7 @@ export class TextEditorTool {
         };
       }
 
-      const fileContent = await fs.readFile(resolvedPath, "utf-8");
+      const fileContent = await readFile(resolvedPath, "utf-8");
       const lines = fileContent.split("\n");
 
       if (startLine < 1 || startLine > lines.length) {
@@ -401,7 +401,7 @@ export class TextEditorTool {
         };
       }
 
-      const fileContent = await fs.readFile(resolvedPath, "utf-8");
+      const fileContent = await readFile(resolvedPath, "utf-8");
       const lines = fileContent.split("\n");
 
       lines.splice(insertLine - 1, 0, content);
@@ -454,7 +454,7 @@ export class TextEditorTool {
       switch (lastEdit.command) {
         case "str_replace":
           if (lastEdit.path && lastEdit.old_str && lastEdit.new_str) {
-            const content = await fs.readFile(lastEdit.path, "utf-8");
+            const content = await readFile(lastEdit.path, "utf-8");
             const revertedContent = content.replace(
               lastEdit.new_str,
               lastEdit.old_str
@@ -471,7 +471,7 @@ export class TextEditorTool {
 
         case "insert":
           if (lastEdit.path && lastEdit.insert_line) {
-            const content = await fs.readFile(lastEdit.path, "utf-8");
+            const content = await readFile(lastEdit.path, "utf-8");
             const lines = content.split("\n");
             lines.splice(lastEdit.insert_line - 1, 1);
             await writeFilePromise(lastEdit.path, lines.join("\n"), "utf-8");
