@@ -14,7 +14,7 @@ export default function ThinkingPanel({ thinkingContent, modelName, isVisible, i
                     return ".";
                 return prev + ".";
             });
-        }, 400);
+        }, 1000); // Reduced from 400ms to 1000ms to prevent screen flashing
         return () => clearInterval(interval);
     }, [isStreaming]);
     // Ensure thinkingContent is a string (defensive check)

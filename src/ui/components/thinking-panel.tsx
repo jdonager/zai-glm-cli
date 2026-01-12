@@ -28,7 +28,7 @@ export default function ThinkingPanel({
         if (prev === "...") return ".";
         return prev + ".";
       });
-    }, 400);
+    }, 1000); // Reduced from 400ms to 1000ms to prevent screen flashing
 
     return () => clearInterval(interval);
   }, [isStreaming]);

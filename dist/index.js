@@ -13,6 +13,7 @@ import SettingsPanel from "./ui/components/settings-panel.js";
 import { getSettingsManager } from "./utils/settings-manager.js";
 import { ConfirmationService } from "./utils/confirmation-service.js";
 import { createMCPCommand } from "./commands/mcp.js";
+import { createSkillCommand } from "./commands/skill.js";
 import { getMetricsCollector } from "./utils/metrics.js";
 import { getSessionManager } from "./utils/session-manager.js";
 import { readFileSync } from "fs";
@@ -340,6 +341,25 @@ program
         const agent = new ZaiAgent(apiKey, baseURL, model, maxToolRounds);
         console.log("🤖 Starting ZAI CLI Conversational Assistant...\n");
         ensureUserSettingsDirectory();
+        // Load custom skills
+        try {
+            const { getSkillLoader } = await import('./agents/skill-loader.js');
+            const skillLoader = getSkillLoader();
+            const loadedCount = await skillLoader.loadAllSkills();
+            if (loadedCount > 0) {
+                console.log(`✓ Loaded ${loadedCount} custom skill(s)`);
+            }
+            // Report any errors that occurred during loading
+            const errors = skillLoader.getLoadErrors();
+            if (errors.length > 0) {
+                console.warn(`⚠️  Warning: ${errors.length} skill(s) failed to load:`);
+                errors.forEach(({ file, error }) => console.warn(`   - ${file}: ${error}`));
+            }
+        }
+        catch (error) {
+            console.warn('⚠️  Warning: Failed to load custom skills:', error instanceof Error ? error.message : String(error));
+            console.warn('   Built-in skills are still available. Run "zai skill list" to see available skills.');
+        }
         // Support variadic positional arguments for multi-word initial message
         const initialMessage = Array.isArray(message)
             ? message.join(" ")
@@ -531,6 +551,8 @@ gitCommand
 });
 // MCP command
 program.addCommand(createMCPCommand());
+// Skill command
+program.addCommand(createSkillCommand());
 // Session list command
 program
     .command("sessions")
